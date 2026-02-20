@@ -4,7 +4,8 @@ import {
     updateDoc,
     deleteDoc,
     doc,
-    serverTimestamp
+    serverTimestamp,
+    writeBatch
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { type Project } from "@/types";
@@ -32,5 +33,14 @@ export const projectService = {
     async deleteProject(id: string) {
         const docRef = doc(db, COLLECTION_NAME, id);
         return await deleteDoc(docRef);
+    },
+
+    async reorderProjects(projects: { id: string, order: number }[]) {
+        const batch = writeBatch(db);
+        projects.forEach(p => {
+            const docRef = doc(db, COLLECTION_NAME, p.id);
+            batch.update(docRef, { order: p.order, updatedAt: serverTimestamp() });
+        });
+        return await batch.commit();
     }
 };

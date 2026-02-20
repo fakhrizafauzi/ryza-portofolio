@@ -36,6 +36,26 @@ export interface Project extends BaseDoc {
         githubButton?: string;
         demoButton?: string;
         nextProjectLabel?: string;
+        // Section Titles
+        statsTitle?: string;
+        challengeTitle?: string;
+        solutionTitle?: string;
+        milestonesTitle?: string;
+        designTokensTitle?: string;
+        testimonialsTitle?: string;
+        processTitle?: string;
+        techStackTitle?: string;
+        featuresTitle?: string;
+        userPersonasTitle?: string;
+        comparisonTitle?: string;
+        roadmapTitle?: string;
+        reflectionsTitle?: string;
+        technicalDeepDiveTitle?: string;
+        architectureTitle?: string;
+        perfSeoTitle?: string;
+        faqTitle?: string;
+        designDecisionsTitle?: string;
+        successMetricsTitle?: string;
     };
 
     // Premium Case Study Sections
@@ -51,6 +71,19 @@ export interface Project extends BaseDoc {
         fonts?: { name: string, family: string }[];
     };
     testimonials?: { quote: string, author: string, role?: string, avatar?: string }[];
+    processSteps?: { title: string, description?: string, icon?: string }[];
+    techStack?: { name: string, icon?: string, level?: string }[];
+    features?: { title: string, description?: string }[];
+    userPersonas?: { name: string, role: string, bio: string, goals?: string, pains?: string, avatar?: string }[];
+    comparison?: { before: string, after: string, caption?: string }[];
+    roadmap?: { title: string, date: string, status: 'Planned' | 'In Progress' | 'Completed', description?: string }[];
+    reflections?: { title: string, content: string, icon?: string }[];
+    technicalDeepDive?: { title: string, description: string, code?: string, language?: string }[];
+    architecture?: { title: string, description: string, image?: string }[];
+    perfSeo?: { performance: number, accessibility: number, bestPractices: number, seo: number };
+    faq?: { question: string, answer: string }[];
+    designDecisions?: { title: string, choice: string, rationale: string }[];
+    successMetrics?: { label: string, value: string, trend: 'up' | 'down' | 'neutral', goal?: string }[];
 
     // Feature Visibility Toggles
     visibility?: {
@@ -60,6 +93,19 @@ export interface Project extends BaseDoc {
         showMilestones?: boolean;
         showDesignTokens?: boolean;
         showTestimonials?: boolean;
+        showProcess?: boolean;
+        showTech?: boolean;
+        showFeatures?: boolean;
+        showUserPersonas?: boolean;
+        showComparison?: boolean;
+        showRoadmap?: boolean;
+        showReflections?: boolean;
+        showTechnicalDeepDive?: boolean;
+        showArchitecture?: boolean;
+        showPerfSeo?: boolean;
+        showFaq?: boolean;
+        showDesignDecisions?: boolean;
+        showSuccessMetrics?: boolean;
     };
 
     // Layout Flexibility

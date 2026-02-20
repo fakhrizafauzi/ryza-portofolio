@@ -71,6 +71,7 @@ const settingsSchema = z.object({
     siteName: z.string().min(1, "Site name is required"),
     siteTitle: z.string().optional(),
     siteLogo: z.string().optional(),
+    favicon: z.string().optional(),
     contactEmail: z.string().email("Invalid email"),
     phone: z.string().optional(),
     location: z.string().optional(),
@@ -189,6 +190,7 @@ export function SettingsForm({ initialData, onSubmit }: SettingsFormProps) {
             siteName: initialData?.siteName || "",
             siteTitle: initialData?.siteTitle || "",
             siteLogo: initialData?.siteLogo || "",
+            favicon: initialData?.favicon || "",
             contactEmail: initialData?.contactEmail || "",
             phone: initialData?.phone || "",
             location: initialData?.location || "",
@@ -220,6 +222,7 @@ export function SettingsForm({ initialData, onSubmit }: SettingsFormProps) {
                 siteName: initialData.siteName || "",
                 siteTitle: initialData.siteTitle || "",
                 siteLogo: initialData.siteLogo || "",
+                favicon: initialData.favicon || "",
                 contactEmail: initialData.contactEmail || "",
                 phone: initialData.phone || "",
                 location: initialData.location || "",
@@ -280,7 +283,7 @@ export function SettingsForm({ initialData, onSubmit }: SettingsFormProps) {
                         <h3 className="text-lg font-bold flex items-center gap-2 border-b pb-2">
                             <Globe className="w-5 h-5 text-primary" /> Branding & Identity
                         </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="space-y-2">
                                 <Label htmlFor="siteName">Site Name (Logo Text)</Label>
                                 <Input id="siteName" {...register("siteName")} placeholder="e.g. FAKHR." />
@@ -307,11 +310,38 @@ export function SettingsForm({ initialData, onSubmit }: SettingsFormProps) {
                                     accept="image/*"
                                 />
                                 <div className="space-y-1">
-                                    <Label className="text-xs text-muted-foreground">Or paste logo URL directly</Label>
+                                    <Label className="text-xs text-muted-foreground">Or paste logo URL</Label>
                                     <Input
                                         placeholder="https://example.com/logo.png"
                                         value={siteLogo || ""}
                                         onChange={(e) => setValue("siteLogo", e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-4">
+                                <Label className="flex items-center gap-1">Favicon</Label>
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-xl bg-muted border-2 border-dashed flex items-center justify-center overflow-hidden">
+                                        {watch("favicon") ? <img src={watch("favicon")} className="w-full h-full object-contain" /> : <Globe className="w-6 h-6 text-muted-foreground/40" />}
+                                    </div>
+                                    {watch("favicon") && (
+                                        <Button type="button" variant="ghost" size="sm" onClick={() => setValue("favicon", "")}>
+                                            Clear
+                                        </Button>
+                                    )}
+                                </div>
+                                <FileUploader
+                                    folder="settings"
+                                    onUploadSuccess={(url) => setValue("favicon", url)}
+                                    label="Upload Favicon"
+                                    accept="image/*"
+                                />
+                                <div className="space-y-1">
+                                    <Label className="text-xs text-muted-foreground">Or paste URL</Label>
+                                    <Input
+                                        placeholder="https://example.com/favicon.ico"
+                                        value={watch("favicon") || ""}
+                                        onChange={(e) => setValue("favicon", e.target.value)}
                                     />
                                 </div>
                             </div>

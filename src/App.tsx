@@ -1,7 +1,10 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect, Component } from 'react'
+import type { ErrorInfo, ReactNode } from 'react'
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useFirestoreCollection } from '@/hooks/useFirestoreCollection'
 import { useFirestoreDocument } from '@/hooks/useFirestoreDocument'
+import { useTheme } from '@/components/ThemeProvider'
+import { motion } from 'framer-motion'
 import { seedDatabase } from '@/lib/seed'
 import { type Project, type SiteSettings } from '@/types'
 import { useAuth } from '@/context/AuthContext'
@@ -65,11 +68,14 @@ import {
   Star,
   CheckCircle2,
   ArrowRight,
+  ArrowLeft,
   TrendingUp,
   Award,
   Layers,
   Heart,
   Menu,
+  Sun,
+  Moon,
   X
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -81,6 +87,26 @@ import {
   DialogTitle
 } from '@/components/ui/dialog'
 import { ProjectPage } from '@/pages/ProjectPage'
+import ScrollToTop from '@/components/ScrollToTop'
+import NotFound from '@/pages/NotFound'
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableItem } from '@/components/admin/SortableItem';
+
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean, error: Error | null }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: Error) { return { hasError: true, error }; }
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) { console.error("ErrorBoundary caught an error", error, errorInfo); }
+  render() {
+    if (this.state.hasError) {
+      return <div className="p-4 bg-red-50 text-red-900 border border-red-200 rounded-lg whitespace-pre-wrap"><h2 className="font-bold mb-2">Something went wrong.</h2><p>{this.state.error?.toString()}</p></div>;
+    }
+    return this.props.children;
+  }
+}
 
 // Helper to handle legacy social links structure
 const normalizeSocialLinks = (links: any) => {
@@ -210,6 +236,7 @@ function LandingPage({ projects, skills, experiences, sections, settings, loadin
   };
 
   const { hash } = useLocation();
+  const [pageState, setPageState] = useState<Record<string, number>>({});
 
   // Handle hash scroll on mount or hash change
   useEffect(() => {
@@ -278,6 +305,22 @@ function LandingPage({ projects, skills, experiences, sections, settings, loadin
               <div className={`space-y-8 flex flex-col ${alignClass}`}>
                 <h2 className={`text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tight leading-[0.9] ${section.options?.align === 'center' ? 'text-center' : section.options?.align === 'right' ? 'text-right' : 'text-left'}`}>{section.title}</h2>
                 <p className={`text-xl md:text-2xl text-muted-foreground leading-relaxed max-w-2xl ${section.options?.align === 'center' ? 'text-center mx-auto' : section.options?.align === 'right' ? 'text-right ml-auto' : 'text-left'}`}>{section.subtitle}</p>
+                <div className="flex flex-wrap gap-4 pt-4 animate-in fade-in slide-in-from-bottom-12 duration-1000">
+                  {section.options?.primaryBtnText && (
+                    <Link to={section.options.primaryBtnUrl || "#"}>
+                      <Button size="lg" className="rounded-full px-10 h-14 text-lg font-bold group" style={{ backgroundColor: accentColor }}>
+                        {section.options.primaryBtnText} <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                      </Button>
+                    </Link>
+                  )}
+                  {section.options?.secondaryBtnText && (
+                    <Link to={section.options.secondaryBtnUrl || "#"}>
+                      <Button variant="outline" size="lg" className="rounded-full px-10 h-14 text-lg font-bold border-white/10 bg-white/5 text-white backdrop-blur-md hover:bg-white/10">
+                        {section.options.secondaryBtnText}
+                      </Button>
+                    </Link>
+                  )}
+                </div>
               </div>
               <div className="relative aspect-square md:aspect-video rounded-[2.5rem] overflow-hidden border-8 border-background shadow-2xl bg-muted group">
                 {section.options?.image ? (
@@ -285,6 +328,49 @@ function LandingPage({ projects, skills, experiences, sections, settings, loadin
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-primary/20"><LayoutGrid className="w-20 h-20" /></div>
                 )}
+              </div>
+            </section>
+          );
+        }
+
+        if (section.templateId === 'hero-gradient') {
+          return (
+            <section id={sectionId} key={section.id} className="relative min-h-[90vh] flex items-center justify-center rounded-[4rem] overflow-hidden group mb-20" style={dynamicStyles}>
+              <div className="absolute inset-0 bg-[#0f172a]" />
+              <div className="absolute inset-0 opacity-40">
+                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-purple-600/30 blur-[120px] animate-pulse" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-600/30 blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
+                <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] rounded-full bg-pink-600/20 blur-[100px] animate-pulse" style={{ animationDelay: '4s' }} />
+              </div>
+              <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:40px_40px]" />
+
+              <div className={`relative z-10 max-w-5xl px-8 flex flex-col ${alignClass} space-y-10`}>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-md text-white/50 text-xs font-bold uppercase tracking-widest animate-in fade-in slide-in-from-top-4 duration-700">
+                  <span className="w-2 h-2 rounded-full bg-primary animate-ping" />
+                  {section.options?.badgeText || "Available for new projects"}
+                </div>
+                <h2 className={`text-6xl md:text-9xl font-black tracking-tighter leading-none text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-white/20 animate-in fade-in zoom-in duration-1000 ${section.options?.align === 'center' ? 'text-center' : section.options?.align === 'right' ? 'text-right' : 'text-left'}`}>
+                  {section.title}
+                </h2>
+                <p className={`text-xl md:text-3xl text-white/60 leading-relaxed max-w-3xl animate-in fade-in slide-in-from-bottom-8 duration-1000 ${section.options?.align === 'center' ? 'mx-auto text-center' : section.options?.align === 'right' ? 'ml-auto text-right' : 'text-left'}`}>
+                  {section.subtitle}
+                </p>
+                <div className="flex flex-wrap gap-4 pt-4 animate-in fade-in slide-in-from-bottom-12 duration-1000">
+                  {section.options?.primaryBtnText && (
+                    <Link to={section.options.primaryBtnUrl || "#"}>
+                      <Button size="lg" className="rounded-full px-10 h-14 text-lg font-bold group" style={{ backgroundColor: accentColor }}>
+                        {section.options.primaryBtnText} <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                      </Button>
+                    </Link>
+                  )}
+                  {section.options?.secondaryBtnText && (
+                    <Link to={section.options.secondaryBtnUrl || "#"}>
+                      <Button variant="outline" size="lg" className="rounded-full px-10 h-14 text-lg font-bold border-white/10 bg-white/5 text-white backdrop-blur-md hover:bg-white/10">
+                        {section.options.secondaryBtnText}
+                      </Button>
+                    </Link>
+                  )}
+                </div>
               </div>
             </section>
           );
@@ -336,6 +422,57 @@ function LandingPage({ projects, skills, experiences, sections, settings, loadin
         );
 
       case 'custom':
+        if (section.templateId === 'about-card') {
+          return (
+            <section id={sectionId} key={section.id} className={`py-24 px-8 rounded-[4rem] ${sectionStyle} mb-20`} style={dynamicStyles}>
+              <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                <div className="relative aspect-[4/5] rounded-[3rem] overflow-hidden shadow-2xl group border-8 border-background">
+                  {section.options?.image ? (
+                    <img src={section.options.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
+                  ) : (
+                    <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary/20">
+                      <Users className="w-32 h-32" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  <div className="absolute bottom-10 left-10 p-8 rounded-3xl backdrop-blur-xl bg-white/10 border border-white/20 text-white max-w-[80%]">
+                    <div className="text-4xl font-black mb-1">{section.options?.userName || "FAKHR."}</div>
+                    <div className="text-sm font-bold uppercase tracking-widest opacity-70">{section.options?.userRole || "Digital Artisan"}</div>
+                  </div>
+                </div>
+                <div className={`space-y-12 flex flex-col ${alignClass}`}>
+                  <div className="space-y-6">
+                    <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9]">{section.title}</h2>
+                    <div className="h-1.5 w-24 bg-primary rounded-full" style={{ backgroundColor: accentColor }} />
+                  </div>
+                  <p className="text-2xl text-muted-foreground leading-relaxed font-medium">
+                    {section.subtitle}
+                  </p>
+                  <div className="grid grid-cols-2 gap-8 pt-6">
+                    <div className="space-y-2">
+                      <div className="text-4xl font-bold tracking-tighter">{section.options?.stat1Value || "5+"}</div>
+                      <div className="text-xs uppercase tracking-widest font-black text-primary" style={{ color: accentColor }}>{section.options?.stat1Label || "Years Experience"}</div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="text-4xl font-bold tracking-tighter">{section.options?.stat2Value || "100+"}</div>
+                      <div className="text-xs uppercase tracking-widest font-black text-primary" style={{ color: accentColor }}>{section.options?.stat2Label || "Projects Delivered"}</div>
+                    </div>
+                  </div>
+                  <div className="pt-8">
+                    {section.options?.primaryBtnText && (
+                      <Link to={section.options.primaryBtnUrl || "#"}>
+                        <Button size="lg" className="rounded-full px-8 h-14" style={{ backgroundColor: accentColor }}>
+                          {section.options.primaryBtnText} <FileText className="ml-2 w-5 h-5" />
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </section>
+          );
+        }
+
         if (section.templateId === 'about-bold') {
           return (
             <section id={sectionId} key={section.id} className={`py-20 px-8 rounded-[3rem] ${sectionStyle} text-center space-y-12`} style={dynamicStyles}>
@@ -402,6 +539,17 @@ function LandingPage({ projects, skills, experiences, sections, settings, loadin
         const isFeatured = section.templateId === 'projects-featured';
         const isBento = section.templateId === 'projects-bento';
         const isMasonry = section.templateId === 'projects-masonry';
+        const isSlider = section.options?.displayMode === 'slider';
+
+        const itemsPerPage = section.options?.itemsPerPage ? parseInt(section.options.itemsPerPage) : 6;
+        const currentPage = pageState[section.id] || 1;
+        const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
+
+        let pagedProjects = filteredProjects;
+        if (!isSlider && filteredProjects.length > itemsPerPage) {
+          const startIndex = (currentPage - 1) * itemsPerPage;
+          pagedProjects = filteredProjects.slice(startIndex, startIndex + itemsPerPage);
+        }
 
         return (
           <section id={sectionId} key={section.id} className={`space-y-12 py-12 px-8 rounded-[3rem] ${sectionStyle}`} style={dynamicStyles}>
@@ -419,9 +567,9 @@ function LandingPage({ projects, skills, experiences, sections, settings, loadin
               <div className="py-20 text-center border-4 border-dashed rounded-[3rem] text-muted-foreground">
                 Building something amazing...
               </div>
-            ) : section.options?.displayMode === 'slider' ? (
+            ) : isSlider ? (
               <div className="flex overflow-x-auto gap-8 pb-8 no-scrollbar scroll-smooth">
-                {filteredProjects.map((project: Project) => (
+                {pagedProjects.map((project: Project) => (
                   <Link
                     to={`/project/${project.id}`}
                     key={project.id}
@@ -441,9 +589,42 @@ function LandingPage({ projects, skills, experiences, sections, settings, loadin
                   </Link>
                 ))}
               </div>
+            ) : section.templateId === 'projects-showcase' ? (
+              <div className="space-y-32">
+                {pagedProjects.map((project: Project, i: number) => (
+                  <div key={project.id} className={`flex flex-col ${i % 2 === 1 ? 'lg:flex-row-reverse' : 'lg:flex-row'} gap-16 items-center group`}>
+                    <div className="flex-1 w-full">
+                      <Link to={`/project/${project.id}`} className="block relative aspect-[16/10] rounded-[3rem] overflow-hidden shadow-2xl border-4 border-transparent group-hover:border-primary transition-all duration-700 bg-muted" style={{ borderColor: accentColor }}>
+                        {project.portfolioImages?.[0] ? (
+                          <img src={project.portfolioImages[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-muted-foreground font-bold">Showcase Pending</div>
+                        )}
+                        <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
+                      </Link>
+                    </div>
+                    <div className={`flex-1 space-y-8 flex flex-col ${i % 2 === 1 ? 'text-right items-end' : 'text-left items-start'}`}>
+                      <div className="space-y-4">
+                        <div className="flex gap-2 justify-inherit">
+                          {project.tags.slice(0, 3).map(tag => (
+                            <span key={tag} className="text-[10px] bg-primary/10 text-primary px-3 py-1 rounded-full font-black uppercase tracking-widest" style={{ color: accentColor, backgroundColor: accentColor + '10' }}>{tag}</span>
+                          ))}
+                        </div>
+                        <h4 className="text-5xl md:text-7xl font-black tracking-tighter group-hover:text-primary transition-colors leading-none">{project.title}</h4>
+                      </div>
+                      <p className="text-xl text-muted-foreground leading-relaxed max-w-xl">{project.description}</p>
+                      <Link to={`/project/${project.id}`}>
+                        <Button size="lg" variant="outline" className="rounded-full px-10 h-14 border-2 hover:bg-primary hover:text-white transition-all group" style={{ borderColor: accentColor }}>
+                          {section.options?.primaryBtnText || "Discover Case Study"} <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : isBento ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 lg:grid-rows-2 gap-8 h-auto lg:h-[900px]">
-                {filteredProjects.slice(0, 4).map((project: Project, i: number) => (
+                {pagedProjects.slice(0, 4).map((project: Project, i: number) => (
                   <Link
                     to={`/project/${project.id}`}
                     key={project.id}
@@ -461,7 +642,7 @@ function LandingPage({ projects, skills, experiences, sections, settings, loadin
               </div>
             ) : isMasonry ? (
               <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
-                {filteredProjects.map((project: Project) => (
+                {pagedProjects.map((project: Project) => (
                   <Link
                     to={`/project/${project.id}`}
                     key={project.id}
@@ -484,7 +665,7 @@ function LandingPage({ projects, skills, experiences, sections, settings, loadin
               </div>
             ) : (
               <div className={isFeatured ? "space-y-24" : "grid grid-cols-1 md:grid-cols-2 gap-12"}>
-                {filteredProjects.map((project: Project, i: number) => (
+                {pagedProjects.map((project: Project, i: number) => (
                   <Link
                     to={`/project/${project.id}`}
                     key={project.id}
@@ -511,6 +692,74 @@ function LandingPage({ projects, skills, experiences, sections, settings, loadin
                     </div>
                   </Link>
                 ))}
+              </div>
+            )}
+
+            {!isSlider && totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 pt-12">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  disabled={currentPage === 1}
+                  onClick={() => {
+                    setPageState(prev => ({ ...prev, [section.id]: currentPage - 1 }));
+                    setTimeout(() => {
+                      const el = document.getElementById(sectionId);
+                      if (el) {
+                        const y = el.getBoundingClientRect().top + window.scrollY - 100; // offset for nav
+                        window.scrollTo({ top: y, behavior: 'smooth' });
+                      }
+                    }, 50);
+                  }}
+                  className="h-10 w-10 md:h-12 md:w-12 rounded-full border-primary/20 hover:border-primary hover:bg-primary/5 transition-all text-muted-foreground hover:text-primary disabled:opacity-30"
+                >
+                  <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
+                </Button>
+
+                <div className="flex items-center gap-1 md:gap-2 px-4 md:px-6 py-2 md:py-3 rounded-full bg-secondary/30 border border-primary/10">
+                  {Array.from({ length: totalPages }).map((_, idx) => {
+                    const page = idx + 1;
+                    const isActive = page === currentPage;
+                    // For very large numbers of pages we might want ellipsis, but usually max is ~5-10
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => {
+                          setPageState(prev => ({ ...prev, [section.id]: page }));
+                          setTimeout(() => {
+                            const el = document.getElementById(sectionId);
+                            if (el) {
+                              const y = el.getBoundingClientRect().top + window.scrollY - 100;
+                              window.scrollTo({ top: y, behavior: 'smooth' });
+                            }
+                          }, 50);
+                        }}
+                        className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-xs md:text-sm font-bold transition-all ${isActive ? 'bg-primary text-primary-foreground shadow-lg scale-110' : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'}`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="icon"
+                  disabled={currentPage === totalPages}
+                  onClick={() => {
+                    setPageState(prev => ({ ...prev, [section.id]: currentPage + 1 }));
+                    setTimeout(() => {
+                      const el = document.getElementById(sectionId);
+                      if (el) {
+                        const y = el.getBoundingClientRect().top + window.scrollY - 100;
+                        window.scrollTo({ top: y, behavior: 'smooth' });
+                      }
+                    }, 50);
+                  }}
+                  className="h-10 w-10 md:h-12 md:w-12 rounded-full border-primary/20 hover:border-primary hover:bg-primary/5 transition-all text-muted-foreground hover:text-primary disabled:opacity-30"
+                >
+                  <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
+                </Button>
               </div>
             )}
           </section>
@@ -981,22 +1230,38 @@ function LandingPage({ projects, skills, experiences, sections, settings, loadin
   };
 
   return (
-    <main className="max-w-7xl mx-auto px-4 pb-16 space-y-12">
+    <main className="max-w-7xl mx-auto px-4 pb-16 space-y-12 overflow-hidden">
       {loading ? (
         <LandingPageSkeleton />
       ) : sections.length > 0 ? (
-        sections.map(renderSection)
+        sections.map((sec: PageSection, idx: number) => (
+          <motion.div
+            key={`wrapper-${sec.id}-${idx}`}
+            initial={{ opacity: 0, y: 60 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-10%" }}
+            transition={{ duration: 0.7, ease: [0.21, 0.47, 0.32, 0.98] }}
+          >
+            {renderSection(sec)}
+          </motion.div>
+        ))
       ) : (
         // Fallback to default layout if no sections defined
         <>
-          <section className="space-y-6 max-w-4xl pt-12 md:pt-24">
+          <motion.section
+            initial={{ opacity: 0, y: 60 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+            className="space-y-6 max-w-4xl pt-12 md:pt-24"
+          >
             <h2 className="text-5xl md:text-8xl font-extrabold tracking-tight leading-[1]">
               {s.heroTitle}
             </h2>
             <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed max-w-2xl">
               {s.heroSubtitle}
             </p>
-          </section>
+          </motion.section>
           {/* ... other default sections ... */}
         </>
       )}
@@ -1007,7 +1272,41 @@ function LandingPage({ projects, skills, experiences, sections, settings, loadin
 
 // Admin Dashboard Component
 const AdminDashboard = () => {
-  const { data: projects } = useFirestoreCollection<Project>('projects')
+  const { data: initialProjects } = useFirestoreCollection<Project>('projects')
+  const [orderedProjects, setOrderedProjects] = useState<Project[]>([])
+
+  useEffect(() => {
+    if (initialProjects) setOrderedProjects([...initialProjects].sort((a, b) => (a.order || 0) - (b.order || 0)));
+  }, [initialProjects]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (active && over && active.id !== over.id) {
+      setOrderedProjects((items) => {
+        const oldIndex = items.findIndex((i) => i.id === active.id);
+        const newIndex = items.findIndex((i) => i.id === over.id);
+        const newItems = arrayMove(items, oldIndex, newIndex);
+
+        const updates = newItems.map((item, index) => ({ id: item.id, order: index }));
+        projectService.reorderProjects(updates).catch(() => toast.error("Failed to update order"));
+
+        return newItems;
+      });
+    }
+  };
+
   const { data: skills } = useFirestoreCollection<Skill>('skills')
   const { data: experiences } = useFirestoreCollection<Experience>('experiences')
   const { data: settings } = useFirestoreDocument<SiteSettings>('settings', 'global')
@@ -1181,31 +1480,46 @@ const AdminDashboard = () => {
 
         <TabsContent value="projects" className="space-y-6 outline-none">
           <div className="grid grid-cols-1 gap-4">
-            {projects.length === 0 ? (
+            {orderedProjects.length === 0 ? (
               <div className="p-20 border-2 border-dashed rounded-[2rem] text-center text-muted-foreground">
                 No projects added yet. Click "New Project" to begin.
               </div>
-            ) : projects.map((project: Project) => (
-              <div key={project.id} className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-2xl bg-card hover:border-primary/50 transition-all shadow-sm gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-20 h-14 md:w-24 md:h-16 rounded-lg bg-muted overflow-hidden border flex-shrink-0">
-                    {project.portfolioImages?.[0] && <img src={project.portfolioImages[0]} className="w-full h-full object-cover" />}
-                  </div>
-                  <div className="min-w-0">
-                    <h4 className="font-bold text-lg truncate">{project.title}</h4>
-                    <p className="text-sm text-muted-foreground line-clamp-1">{project.description}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 justify-end">
-                  <Button variant="ghost" size="icon" onClick={() => setActiveDialog({ type: 'edit', category: 'project', data: project })}>
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => handleDelete('project', project.id)}>
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
+            ) : (
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={orderedProjects.map(p => p.id)} strategy={verticalListSortingStrategy}>
+                  {orderedProjects.map((project: Project) => (
+                    <SortableItem key={project.id} id={project.id} dragHandle>
+                      <div className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-2xl bg-card hover:border-primary/50 transition-all shadow-sm gap-4 w-full">
+                        <div className="flex items-center gap-4">
+                          <div className="w-20 h-14 md:w-24 md:h-16 rounded-lg bg-muted overflow-hidden border flex-shrink-0">
+                            {project.portfolioImages?.[0] && <img src={project.portfolioImages[0]} className="w-full h-full object-cover" />}
+                          </div>
+                          <div className="min-w-0">
+                            <h4 className="font-bold text-lg truncate">{project.title}</h4>
+                            <p className="text-sm text-muted-foreground line-clamp-1">{project.description}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 justify-end">
+                          <Button variant="ghost" size="icon" onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveDialog({ type: 'edit', category: 'project', data: project });
+                          }}>
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete('project', project.id);
+                          }}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+
+                      </div>
+                    </SortableItem>
+                  ))}
+                </SortableContext>
+              </DndContext>
+            )}
           </div>
         </TabsContent>
 
@@ -1278,27 +1592,29 @@ const AdminDashboard = () => {
           <DialogHeader>
             <DialogTitle>{activeDialog?.type === 'create' ? 'Create' : 'Edit'} {activeDialog?.category}</DialogTitle>
           </DialogHeader>
-          {activeDialog?.category === 'project' && (
-            <ProjectForm
-              initialData={activeDialog.data}
-              onSubmit={activeDialog.type === 'create' ? handleProjectCreate : handleProjectUpdate}
-              onCancel={() => setActiveDialog(null)}
-            />
-          )}
-          {activeDialog?.category === 'skill' && (
-            <SkillForm
-              initialData={activeDialog.data}
-              onSubmit={activeDialog.type === 'create' ? handleSkillCreate : handleSkillUpdate}
-              onCancel={() => setActiveDialog(null)}
-            />
-          )}
-          {activeDialog?.category === 'experience' && (
-            <ExperienceForm
-              initialData={activeDialog.data}
-              onSubmit={activeDialog.type === 'create' ? handleExperienceCreate : handleExperienceUpdate}
-              onCancel={() => setActiveDialog(null)}
-            />
-          )}
+          <ErrorBoundary>
+            {activeDialog?.category === 'project' && (
+              <ProjectForm
+                initialData={activeDialog.data}
+                onSubmit={activeDialog.type === 'create' ? handleProjectCreate : handleProjectUpdate}
+                onCancel={() => setActiveDialog(null)}
+              />
+            )}
+            {activeDialog?.category === 'skill' && (
+              <SkillForm
+                initialData={activeDialog.data}
+                onSubmit={activeDialog.type === 'create' ? handleSkillCreate : handleSkillUpdate}
+                onCancel={() => setActiveDialog(null)}
+              />
+            )}
+            {activeDialog?.category === 'experience' && (
+              <ExperienceForm
+                initialData={activeDialog.data}
+                onSubmit={activeDialog.type === 'create' ? handleExperienceCreate : handleExperienceUpdate}
+                onCancel={() => setActiveDialog(null)}
+              />
+            )}
+          </ErrorBoundary>
         </DialogContent>
       </Dialog>
     </main>
@@ -1306,6 +1622,7 @@ const AdminDashboard = () => {
 };
 
 function App() {
+  const { theme, setTheme } = useTheme();
   const { data: projects, loading: loadingProjects } = useFirestoreCollection<Project>('projects')
   const { data: skills, loading: loadingSkills } = useFirestoreCollection<Skill>('skills')
   const { data: experiences, loading: loadingExperiences } = useFirestoreCollection<Experience>('experiences')
@@ -1335,6 +1652,27 @@ function App() {
     }
   }, [s.siteTitle, s.siteName]);
 
+  // Sync favicon
+  useEffect(() => {
+    // Determine the favicon to use, falling back to logo or a generated letter placeholder
+    let faviconUrl = s.favicon || s.siteLogo;
+
+    if (!faviconUrl) {
+      const initial = encodeURIComponent((s.siteName || 'F').charAt(0).toUpperCase());
+      faviconUrl = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%23000"/><text x="50%25" y="50%25" dominant-baseline="central" text-anchor="middle" font-size="60" fill="%23fff" font-family="sans-serif" font-weight="bold">${initial}</text></svg>`;
+    }
+
+    if (faviconUrl) {
+      let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.head.appendChild(link);
+      }
+      link.href = faviconUrl;
+    }
+  }, [s.favicon, s.siteLogo, s.siteName]);
+
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -1352,7 +1690,7 @@ function App() {
     const element = document.getElementById(targetId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
-      window.history.pushState(null, '', `#${targetId}`);
+      navigate({ hash: targetId });
     }
   };
 
@@ -1401,8 +1739,27 @@ function App() {
               })}
           </nav>
 
+          <div className="hidden md:flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full hover:bg-secondary/50"
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            >
+              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </Button>
+          </div>
+
           {/* Mobile Toggle */}
           <div className="flex items-center gap-2 md:hidden relative z-[110]">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            >
+              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -1481,6 +1838,7 @@ function App() {
         </nav>
       </div>
 
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={
           <LandingPage
@@ -1494,6 +1852,7 @@ function App() {
         } />
         <Route path="/project/:id" element={<ProjectPage />} />
         <Route path="/port-admin" element={<AuthGuard><AdminDashboard /></AuthGuard>} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
 
       <footer className="border-t py-16 bg-secondary/20">

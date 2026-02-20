@@ -51,4 +51,9 @@ export const SECTION_TEMPLATES: SectionTemplate[] = [
     { id: 'process-steps', name: 'Process Workflow', description: 'Step-by-step horizontal walkthrough.', type: 'custom' },
     { id: 'cta-banner', name: 'Action Banner', description: 'High-impact call-to-action strip.', type: 'cta' },
     { id: 'tech-stack', name: 'Tech Stack', description: 'Marquee or grid of technology logos.', type: 'custom' },
+
+    // NEW Layout Expansion (Planning Phase)
+    { id: 'hero-gradient', name: 'Gradient Mesh Hero', description: 'Vibrant mesh gradient with glass text.', type: 'hero' },
+    { id: 'projects-showcase', name: 'High-Impact Showcase', description: 'Horizontal project features with big imagery.', type: 'projects' },
+    { id: 'about-card', name: 'Split Bio Card', description: 'Large profile card beside mission statement.', type: 'custom' },
 ];
