@@ -76,7 +76,8 @@ import {
   Menu,
   Sun,
   Moon,
-  X
+  X,
+  ExternalLink
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -229,7 +230,7 @@ const SocialIcon = ({
 // Public Landing Page Component
 function LandingPage({ projects, skills, experiences, sections, settings, loading }: any) {
   const s = settings || {
-    siteName: "FAKHR.",
+    siteName: "RYZA",
     heroTitle: "Building digital experiences that matter.",
     heroSubtitle: "I'm a frontend engineer focused on creating high-performance, accessible, and beautiful web applications using React, TypeScript, and Firebase.",
     footerText: `© ${new Date().getFullYear()} Fakhr. Built with React and Firebase.`
@@ -307,23 +308,46 @@ function LandingPage({ projects, skills, experiences, sections, settings, loadin
                 <p className={`text-xl md:text-2xl text-muted-foreground leading-relaxed max-w-2xl ${section.options?.align === 'center' ? 'text-center mx-auto' : section.options?.align === 'right' ? 'text-right ml-auto' : 'text-left'}`}>{section.subtitle}</p>
                 <div className="flex flex-wrap gap-4 pt-4 animate-in fade-in slide-in-from-bottom-12 duration-1000">
                   {section.options?.primaryBtnText && (
-                    <Link to={section.options.primaryBtnUrl || "#"}>
-                      <Button size="lg" className="rounded-full px-10 h-14 text-lg font-bold group" style={{ backgroundColor: accentColor }}>
-                        {section.options.primaryBtnText} <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-2 transition-transform" />
-                      </Button>
-                    </Link>
+                    section.options.primaryBtnUrl?.startsWith('http') ? (
+                      <a href={section.options.primaryBtnUrl} target="_blank" rel="noreferrer">
+                        <Button size="lg" className="rounded-full px-10 h-14 text-lg font-bold group" style={{ backgroundColor: accentColor }}>
+                          {section.options.primaryBtnText} <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                        </Button>
+                      </a>
+                    ) : (
+                      <Link to={section.options.primaryBtnUrl || "#"}>
+                        <Button size="lg" className="rounded-full px-10 h-14 text-lg font-bold group" style={{ backgroundColor: accentColor }}>
+                          {section.options.primaryBtnText} <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                        </Button>
+                      </Link>
+                    )
                   )}
                   {section.options?.secondaryBtnText && (
-                    <Link to={section.options.secondaryBtnUrl || "#"}>
-                      <Button variant="outline" size="lg" className="rounded-full px-10 h-14 text-lg font-bold border-white/10 bg-white/5 text-white backdrop-blur-md hover:bg-white/10">
-                        {section.options.secondaryBtnText}
-                      </Button>
-                    </Link>
+                    section.options.secondaryBtnUrl?.startsWith('http') ? (
+                      <a href={section.options.secondaryBtnUrl} target="_blank" rel="noreferrer">
+                        <Button variant="outline" size="lg" className="rounded-full px-10 h-14 text-lg font-bold border-white/10 bg-white/5 text-white backdrop-blur-md hover:bg-white/10">
+                          {section.options.secondaryBtnText}
+                        </Button>
+                      </a>
+                    ) : (
+                      <Link to={section.options.secondaryBtnUrl || "#"}>
+                        <Button variant="outline" size="lg" className="rounded-full px-10 h-14 text-lg font-bold border-white/10 bg-white/5 text-white backdrop-blur-md hover:bg-white/10">
+                          {section.options.secondaryBtnText}
+                        </Button>
+                      </Link>
+                    )
                   )}
                 </div>
               </div>
               <div className="relative aspect-square md:aspect-video rounded-[2.5rem] overflow-hidden border-8 border-background shadow-2xl bg-muted group">
-                {section.options?.image ? (
+                {section.options?.imageLink ? (
+                  <a href={section.options.imageLink} target="_blank" rel="noreferrer" className="block w-full h-full cursor-pointer relative overflow-hidden">
+                    <img src={section.options.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
+                    <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <ExternalLink className="w-12 h-12 text-white drop-shadow-lg" />
+                    </div>
+                  </a>
+                ) : section.options?.image ? (
                   <img src={section.options.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-primary/20"><LayoutGrid className="w-20 h-20" /></div>
@@ -357,18 +381,34 @@ function LandingPage({ projects, skills, experiences, sections, settings, loadin
                 </p>
                 <div className="flex flex-wrap gap-4 pt-4 animate-in fade-in slide-in-from-bottom-12 duration-1000">
                   {section.options?.primaryBtnText && (
-                    <Link to={section.options.primaryBtnUrl || "#"}>
-                      <Button size="lg" className="rounded-full px-10 h-14 text-lg font-bold group" style={{ backgroundColor: accentColor }}>
-                        {section.options.primaryBtnText} <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-2 transition-transform" />
-                      </Button>
-                    </Link>
+                    section.options.primaryBtnUrl?.startsWith('http') ? (
+                      <a href={section.options.primaryBtnUrl} target="_blank" rel="noreferrer">
+                        <Button size="lg" className="rounded-full px-10 h-14 text-lg font-bold group" style={{ backgroundColor: accentColor }}>
+                          {section.options.primaryBtnText} <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                        </Button>
+                      </a>
+                    ) : (
+                      <Link to={section.options.primaryBtnUrl || "#"}>
+                        <Button size="lg" className="rounded-full px-10 h-14 text-lg font-bold group" style={{ backgroundColor: accentColor }}>
+                          {section.options.primaryBtnText} <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                        </Button>
+                      </Link>
+                    )
                   )}
                   {section.options?.secondaryBtnText && (
-                    <Link to={section.options.secondaryBtnUrl || "#"}>
-                      <Button variant="outline" size="lg" className="rounded-full px-10 h-14 text-lg font-bold border-white/10 bg-white/5 text-white backdrop-blur-md hover:bg-white/10">
-                        {section.options.secondaryBtnText}
-                      </Button>
-                    </Link>
+                    section.options.secondaryBtnUrl?.startsWith('http') ? (
+                      <a href={section.options.secondaryBtnUrl} target="_blank" rel="noreferrer">
+                        <Button variant="outline" size="lg" className="rounded-full px-10 h-14 text-lg font-bold border-white/10 bg-white/5 text-white backdrop-blur-md hover:bg-white/10">
+                          {section.options.secondaryBtnText}
+                        </Button>
+                      </a>
+                    ) : (
+                      <Link to={section.options.secondaryBtnUrl || "#"}>
+                        <Button variant="outline" size="lg" className="rounded-full px-10 h-14 text-lg font-bold border-white/10 bg-white/5 text-white backdrop-blur-md hover:bg-white/10">
+                          {section.options.secondaryBtnText}
+                        </Button>
+                      </Link>
+                    )
                   )}
                 </div>
               </div>
@@ -379,20 +419,27 @@ function LandingPage({ projects, skills, experiences, sections, settings, loadin
         if (section.templateId === 'hero-visual') {
           return (
             <section id={sectionId} key={section.id} className="relative min-h-[80vh] flex items-center justify-center rounded-[3rem] overflow-hidden group" style={dynamicStyles}>
-              {section.options?.image ? (
-                <img src={section.options.image} className="absolute inset-0 w-full h-full object-cover" />
-              ) : (
-                <div className="absolute inset-0 bg-primary/10" />
-              )}
-              <div className={`absolute inset-0 bg-black/60 backdrop-blur-[2px]`} />
-              <div className={`relative z-10 p-8 max-w-4xl flex flex-col ${alignClass} text-white space-y-6`}>
-                <h2 className={`text-5xl md:text-8xl font-black tracking-tighter leading-none animate-in fade-in zoom-in duration-1000 ${section.options?.align === 'center' ? 'text-center' : section.options?.align === 'right' ? 'text-right' : 'text-left'}`}>
-                  {section.title}
-                </h2>
-                <p className={`text-xl md:text-2xl text-white/80 leading-relaxed max-w-2xl ${section.options?.align === 'center' ? 'mx-auto text-center' : section.options?.align === 'right' ? 'ml-auto text-right' : 'text-left'}`}>
-                  {section.subtitle}
-                </p>
-              </div>
+                {section.options?.imageLink ? (
+                  <a href={section.options.imageLink} target="_blank" rel="noreferrer" className="absolute inset-0 block w-full h-full cursor-pointer group">
+                    <img src={section.options.image} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
+                    <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <ExternalLink className="w-16 h-16 text-white drop-shadow-xl" />
+                    </div>
+                  </a>
+                ) : section.options?.image ? (
+                  <img src={section.options.image} className="absolute inset-0 w-full h-full object-cover" />
+                ) : (
+                  <div className="absolute inset-0 bg-primary/10" />
+                )}
+                <div className={`absolute inset-0 bg-black/60 backdrop-blur-[2px]`} />
+                <div className={`relative z-10 p-8 max-w-4xl flex flex-col ${alignClass} text-white space-y-6`}>
+                  <h2 className={`text-5xl md:text-8xl font-black tracking-tighter leading-none animate-in fade-in zoom-in duration-1000 ${section.options?.align === 'center' ? 'text-center' : section.options?.align === 'right' ? 'text-right' : 'text-left'}`}>
+                    {section.title}
+                  </h2>
+                  <p className={`text-xl md:text-2xl text-white/80 leading-relaxed max-w-2xl ${section.options?.align === 'center' ? 'mx-auto text-center' : section.options?.align === 'right' ? 'ml-auto text-right' : 'text-left'}`}>
+                    {section.subtitle}
+                  </p>
+                </div>
             </section>
           );
         }
@@ -427,7 +474,14 @@ function LandingPage({ projects, skills, experiences, sections, settings, loadin
             <section id={sectionId} key={section.id} className={`py-24 px-8 rounded-[4rem] ${sectionStyle} mb-20`} style={dynamicStyles}>
               <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
                 <div className="relative aspect-[4/5] rounded-[3rem] overflow-hidden shadow-2xl group border-8 border-background">
-                  {section.options?.image ? (
+                  {section.options?.imageLink ? (
+                    <a href={section.options.imageLink} target="_blank" rel="noreferrer" className="block w-full h-full cursor-pointer overflow-hidden relative">
+                      <img src={section.options.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
+                      <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <ExternalLink className="w-12 h-12 text-white drop-shadow-lg" />
+                      </div>
+                    </a>
+                  ) : section.options?.image ? (
                     <img src={section.options.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
                   ) : (
                     <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary/20">
@@ -460,11 +514,19 @@ function LandingPage({ projects, skills, experiences, sections, settings, loadin
                   </div>
                   <div className="pt-8">
                     {section.options?.primaryBtnText && (
-                      <Link to={section.options.primaryBtnUrl || "#"}>
-                        <Button size="lg" className="rounded-full px-8 h-14" style={{ backgroundColor: accentColor }}>
-                          {section.options.primaryBtnText} <FileText className="ml-2 w-5 h-5" />
-                        </Button>
-                      </Link>
+                      section.options.primaryBtnUrl?.startsWith('http') ? (
+                        <a href={section.options.primaryBtnUrl} target="_blank" rel="noreferrer">
+                          <Button size="lg" className="rounded-full px-8 h-14" style={{ backgroundColor: accentColor }}>
+                            {section.options.primaryBtnText} <FileText className="ml-2 w-5 h-5" />
+                          </Button>
+                        </a>
+                      ) : (
+                        <Link to={section.options.primaryBtnUrl || "#"}>
+                          <Button size="lg" className="rounded-full px-8 h-14" style={{ backgroundColor: accentColor }}>
+                            {section.options.primaryBtnText} <FileText className="ml-2 w-5 h-5" />
+                          </Button>
+                        </Link>
+                      )
                     )}
                   </div>
                 </div>
@@ -1013,16 +1075,32 @@ function LandingPage({ projects, skills, experiences, sections, settings, loadin
                       ))}
                     </ul>
                   </div>
-                  <Button
-                    className="w-full rounded-full"
-                    variant={tier.featured ? 'default' : 'outline'}
-                    style={tier.featured ?
-                      { backgroundColor: accentColor, color: '#FFFFFF' } :
-                      { borderColor: accentColor, color: accentColor }
-                    }
-                  >
-                    {tier.button}
-                  </Button>
+                  {tier.buttonUrl?.startsWith('http') ? (
+                    <a href={tier.buttonUrl} target="_blank" rel="noreferrer" className="w-full">
+                      <Button
+                        className="w-full rounded-full"
+                        variant={tier.featured ? 'default' : 'outline'}
+                        style={tier.featured ?
+                          { backgroundColor: accentColor, color: '#FFFFFF' } :
+                          { borderColor: accentColor, color: accentColor }
+                        }
+                      >
+                        {tier.button}
+                      </Button>
+                    </a>
+                  ) : (
+                    <Button
+                      className="w-full rounded-full"
+                      variant={tier.featured ? 'default' : 'outline'}
+                      style={tier.featured ?
+                        { backgroundColor: accentColor, color: '#FFFFFF' } :
+                        { borderColor: accentColor, color: accentColor }
+                      }
+                      asChild={!!tier.buttonUrl}
+                    >
+                      {tier.buttonUrl ? <Link to={tier.buttonUrl}>{tier.button}</Link> : tier.button}
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>
@@ -1074,10 +1152,24 @@ function LandingPage({ projects, skills, experiences, sections, settings, loadin
             <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
               {images.map((img: any, i: number) => (
                 <div key={i} className="break-inside-avoid relative group overflow-hidden rounded-[2rem] border-2 border-transparent hover:border-primary transition-all shadow-lg" style={i === 0 ? { borderColor: accentColor } : {}}>
-                  <img src={img.url} className="w-full h-auto object-cover group-hover:scale-110 transition-transform duration-700" alt={img.title} />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-8 backdrop-blur-[2px]">
-                    <span className="text-white font-bold text-center">{img.title}</span>
-                  </div>
+                  {img.link ? (
+                    <a href={img.link} target="_blank" rel="noreferrer" className="block relative">
+                      <img src={img.url} className="w-full h-auto object-cover group-hover:scale-110 transition-transform duration-700" alt={img.title} />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-8 backdrop-blur-[2px]">
+                        <div className="flex flex-col items-center gap-2">
+                          <ExternalLink className="w-8 h-8 text-white mb-2" />
+                          <span className="text-white font-bold text-center">{img.title}</span>
+                        </div>
+                      </div>
+                    </a>
+                  ) : (
+                    <>
+                      <img src={img.url} className="w-full h-auto object-cover group-hover:scale-110 transition-transform duration-700" alt={img.title} />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-8 backdrop-blur-[2px]">
+                        <span className="text-white font-bold text-center">{img.title}</span>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
@@ -1108,11 +1200,26 @@ function LandingPage({ projects, skills, experiences, sections, settings, loadin
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
               {members.map((member: any, i: number) => (
                 <div key={i} className="text-center space-y-6 group">
-                  <div className="relative mx-auto w-48 h-48 rounded-[3rem] overflow-hidden border-8 border-background shadow-2xl group-hover:rotate-3 transition-transform">
-                    <img src={member.img} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
-                  </div>
+                  {member.url ? (
+                    <a href={member.url} target="_blank" rel="noreferrer" className="block relative mx-auto w-48 h-48 rounded-[3rem] overflow-hidden border-8 border-background shadow-2xl group-hover:rotate-3 transition-transform cursor-pointer">
+                      <img src={member.img} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
+                      <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <ExternalLink className="w-10 h-10 text-white" />
+                      </div>
+                    </a>
+                  ) : (
+                    <div className="relative mx-auto w-48 h-48 rounded-[3rem] overflow-hidden border-8 border-background shadow-2xl group-hover:rotate-3 transition-transform">
+                      <img src={member.img} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
+                    </div>
+                  )}
                   <div>
-                    <h4 className="text-2xl font-bold tracking-tight">{member.name}</h4>
+                    {member.url ? (
+                      <a href={member.url} target="_blank" rel="noreferrer" className="hover:text-primary transition-colors">
+                        <h4 className="text-2xl font-bold tracking-tight">{member.name}</h4>
+                      </a>
+                    ) : (
+                      <h4 className="text-2xl font-bold tracking-tight">{member.name}</h4>
+                    )}
                     <p className="text-primary font-bold text-xs uppercase tracking-widest" style={{ color: accentColor }}>{member.role}</p>
                   </div>
                 </div>
@@ -1234,7 +1341,7 @@ function LandingPage({ projects, skills, experiences, sections, settings, loadin
       {loading ? (
         <LandingPageSkeleton />
       ) : sections.length > 0 ? (
-        sections.map((sec: PageSection, idx: number) => (
+        sections.filter((sec: PageSection) => sec.isPublished !== false).map((sec: PageSection, idx: number) => (
           <motion.div
             key={`wrapper-${sec.id}-${idx}`}
             initial={{ opacity: 0, y: 60 }}

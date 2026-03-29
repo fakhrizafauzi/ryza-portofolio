@@ -28,8 +28,10 @@ import {
     BarChart3,
     ArrowRightCircle,
     Phone,
-    Globe
+    Globe,
+    ExternalLink
 } from "lucide-react";
+import { transformGoogleDriveUrl } from "@/lib/utils";
 import { FileUploader } from "./FileUploader";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useFirestoreCollection } from "@/hooks/useFirestoreCollection";
@@ -76,6 +78,21 @@ export function LayoutForm() {
     const [editingSection, setEditingSection] = useState<PageSection | null>(null);
     const [showTemplatePicker, setShowTemplatePicker] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState<{ id: string, title: string } | null>(null);
+
+    const ToggleGoogleDrive = ({ value, onChange, mode = 'view' }: { value: string, onChange: (val: string) => void, mode?: 'view' | 'image' }) => {
+        const isDrive = value.includes('drive.google.com');
+        if (!isDrive) return null;
+
+        return (
+            <button
+                type="button"
+                onClick={() => onChange(transformGoogleDriveUrl(value, mode))}
+                className="text-[10px] font-bold text-primary hover:underline mt-1 flex items-center gap-1"
+            >
+                <ExternalLink className="w-3 h-3" /> Convert to Direct Google Drive Link
+            </button>
+        );
+    };
 
     useEffect(() => {
         loadSections();
@@ -132,7 +149,8 @@ export function LayoutForm() {
                 type: editingSection.type,
                 isPublished: editingSection.isPublished ?? true,
                 navTitle: editingSection.navTitle || "",
-                inNav: editingSection.inNav ?? false
+                inNav: editingSection.inNav ?? false,
+                order: editingSection.order ?? 0
             });
 
             toast.success("Layout changes saved successfully!");
@@ -545,6 +563,10 @@ export function LayoutForm() {
                                                                             value={editingSection.options?.btnUrl || ""}
                                                                             onChange={e => updateOption("btnUrl", e.target.value)}
                                                                         />
+                                                                        <ToggleGoogleDrive
+                                                                            value={editingSection.options?.btnUrl || ""}
+                                                                            onChange={val => updateOption("btnUrl", val)}
+                                                                        />
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -588,7 +610,17 @@ export function LayoutForm() {
                                                                             onChange={e => updateOption("image", e.target.value)}
                                                                             className="h-9 text-xs"
                                                                         />
-                                                                        <p className="text-[10px] text-muted-foreground italic">Past an external image link here.</p>
+                                                                        <p className="text-[10px] text-muted-foreground italic">Paste an external image link here.</p>
+                                                                    </div>
+                                                                    <div className="space-y-2 col-span-full">
+                                                                        <Label className="text-xs">Image Redirect URL (Optional)</Label>
+                                                                        <Input
+                                                                            placeholder="https://... or #contact"
+                                                                            value={editingSection.options?.imageLink || ""}
+                                                                            onChange={e => updateOption("imageLink", e.target.value)}
+                                                                            className="h-9 text-xs"
+                                                                        />
+                                                                        <p className="text-[10px] text-muted-foreground italic">Making the image clickable to navigate elsewhere.</p>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -850,11 +882,24 @@ export function LayoutForm() {
                                                                                     current[idx].price = e.target.value;
                                                                                     updateOption("tiers", current);
                                                                                 }} />
-                                                                                <Input value={tier.button} placeholder="Button Text" className="h-8" onChange={e => {
+                                                                                <Input value={tier.button} placeholder="Button" className="h-8" onChange={e => {
                                                                                     const current = [...(editingSection.options?.tiers || [])];
                                                                                     current[idx].button = e.target.value;
                                                                                     updateOption("tiers", current);
                                                                                 }} />
+                                                                                <Input value={tier.buttonUrl || ""} placeholder="URL" className="h-8" onChange={e => {
+                                                                                    const current = [...(editingSection.options?.tiers || [])];
+                                                                                    current[idx].buttonUrl = e.target.value;
+                                                                                    updateOption("tiers", current);
+                                                                                }} />
+                                                                                <ToggleGoogleDrive
+                                                                                    value={tier.buttonUrl || ""}
+                                                                                    onChange={val => {
+                                                                                        const current = [...(editingSection.options?.tiers || [])];
+                                                                                        current[idx].buttonUrl = val;
+                                                                                        updateOption("tiers", current);
+                                                                                    }}
+                                                                                />
                                                                             </div>
                                                                             <div className="space-y-2">
                                                                                 <Label className="text-[10px] opacity-70 uppercase tracking-widest">Features (comma separated)</Label>
@@ -932,6 +977,28 @@ export function LayoutForm() {
                                                                                 current[idx].role = e.target.value;
                                                                                 updateOption("members", current);
                                                                             }} />
+                                                                            <Input value={m.url || ""} placeholder="External Link" className="h-7 text-[10px]" onChange={e => {
+                                                                                const current = [...(editingSection.options?.members || [])];
+                                                                                current[idx].url = e.target.value;
+                                                                                updateOption("members", current);
+                                                                            }} />
+                                                                            <ToggleGoogleDrive
+                                                                                value={m.url || ""}
+                                                                                onChange={val => {
+                                                                                    const current = [...(editingSection.options?.members || [])];
+                                                                                    current[idx].url = val;
+                                                                                    updateOption("members", current);
+                                                                                }}
+                                                                            />
+                                                                            <ToggleGoogleDrive
+                                                                                value={m.img || ""}
+                                                                                onChange={val => {
+                                                                                    const current = [...(editingSection.options?.members || [])];
+                                                                                    current[idx].img = val;
+                                                                                    updateOption("members", current);
+                                                                                }}
+                                                                                mode="image"
+                                                                            />
                                                                         </div>
                                                                     ))}
                                                                 </div>
@@ -1098,6 +1165,28 @@ export function LayoutForm() {
                                                                                         current[idx].title = e.target.value;
                                                                                         updateOption("images", current);
                                                                                     }} />
+                                                                                    <Input value={img.link || ""} placeholder="Redirect URL (https://...)" className="h-7 text-[10px]" onChange={e => {
+                                                                                        const current = [...(editingSection.options?.images || [])];
+                                                                                        current[idx].link = e.target.value;
+                                                                                        updateOption("images", current);
+                                                                                    }} />
+                                                                                    <ToggleGoogleDrive
+                                                                                        value={img.link || ""}
+                                                                                        onChange={val => {
+                                                                                            const current = [...(editingSection.options?.images || [])];
+                                                                                            current[idx].link = val;
+                                                                                            updateOption("images", current);
+                                                                                        }}
+                                                                                    />
+                                                                                    <ToggleGoogleDrive
+                                                                                        value={img.url || ""}
+                                                                                        onChange={val => {
+                                                                                            const current = [...(editingSection.options?.images || [])];
+                                                                                            current[idx].url = val;
+                                                                                            updateOption("images", current);
+                                                                                        }}
+                                                                                        mode="image"
+                                                                                    />
                                                                                     <FileUploader
                                                                                         folder="gallery"
                                                                                         onUploadSuccess={(url) => {

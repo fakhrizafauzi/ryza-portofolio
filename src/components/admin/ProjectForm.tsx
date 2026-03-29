@@ -2,6 +2,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { type Project } from "@/types";
+import { transformGoogleDriveUrl } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,7 +14,7 @@ import {
     Cpu, Settings, CheckCircle2, List, Sparkles, HelpCircle,
     ArrowLeftRight, Code2,
     GripVertical, TrendingUp, Layers, GitMerge, Lightbulb,
-    UserSearch, Network, Gauge, Terminal
+    UserSearch, Network, Gauge, Terminal, Eye, EyeOff
 } from "lucide-react";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -29,7 +30,7 @@ const projectSchema = z.object({
     category: z.string().optional(),
     portfolioImages: z.array(z.string()).min(1, "At least one image is required"),
     documents: z.array(z.object({ name: z.string(), url: z.string() })).default([]),
-    tags: z.string().transform((val) => val.split(",").map(v => v.trim()).filter(Boolean)),
+    tags: z.string().default(""),
     github: z.string().optional(),
     link: z.string().optional(),
     order: z.coerce.number().default(0),
@@ -46,16 +47,16 @@ const projectSchema = z.object({
         colors: z.array(z.object({ name: z.string(), hex: z.string() })).optional(),
         fonts: z.array(z.object({ name: z.string(), family: z.string() })).optional(),
     }).optional(),
-    testimonials: z.array(z.object({ quote: z.string(), author: z.string(), role: z.string().optional(), avatar: z.string().optional() })).optional(),
-    processSteps: z.array(z.object({ title: z.string(), description: z.string().optional(), icon: z.string().optional() })).optional(),
-    techStack: z.array(z.object({ name: z.string(), icon: z.string().optional(), level: z.string().optional() })).optional(),
-    features: z.array(z.object({ title: z.string(), description: z.string().optional() })).optional(),
-    userPersonas: z.array(z.object({ name: z.string(), role: z.string(), bio: z.string(), goals: z.string().optional(), pains: z.string().optional(), avatar: z.string().optional() })).optional(),
+    testimonials: z.array(z.object({ quote: z.string(), author: z.string(), role: z.string().optional(), avatar: z.string().optional(), url: z.string().optional() })).optional(),
+    processSteps: z.array(z.object({ title: z.string(), description: z.string().optional(), icon: z.string().optional(), url: z.string().optional() })).optional(),
+    techStack: z.array(z.object({ name: z.string(), icon: z.string().optional(), level: z.string().optional(), url: z.string().optional() })).optional(),
+    features: z.array(z.object({ title: z.string(), description: z.string().optional(), url: z.string().optional() })).optional(),
+    userPersonas: z.array(z.object({ name: z.string(), role: z.string(), bio: z.string(), goals: z.string().optional(), pains: z.string().optional(), avatar: z.string().optional(), url: z.string().optional() })).optional(),
     comparison: z.array(z.object({ before: z.string(), after: z.string(), caption: z.string().optional() })).optional(),
     roadmap: z.array(z.object({ title: z.string(), date: z.string(), status: z.enum(['Planned', 'In Progress', 'Completed']), description: z.string().optional() })).optional(),
     reflections: z.array(z.object({ title: z.string(), content: z.string(), icon: z.string().optional() })).optional(),
     technicalDeepDive: z.array(z.object({ title: z.string(), description: z.string(), code: z.string().optional(), language: z.string().optional() })).optional(),
-    architecture: z.array(z.object({ title: z.string(), description: z.string(), image: z.string().optional() })).optional(),
+    architecture: z.array(z.object({ title: z.string(), description: z.string(), image: z.string().optional(), url: z.string().optional() })).optional(),
     perfSeo: z.object({ performance: z.number(), accessibility: z.number(), bestPractices: z.number(), seo: z.number() }).optional(),
     faq: z.array(z.object({ question: z.string(), answer: z.string() })).optional(),
     designDecisions: z.array(z.object({ title: z.string(), choice: z.string(), rationale: z.string() })).optional(),
@@ -132,6 +133,21 @@ export function ProjectForm({ initialData, onSubmit, onCancel }: ProjectFormProp
     const [showBlueprintPicker, setShowBlueprintPicker] = useState(false);
     const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
+    const ToggleGoogleDrive = ({ value, onChange, mode = 'view' }: { value: string, onChange: (val: string) => void, mode?: 'view' | 'image' }) => {
+        const isDrive = value.includes('drive.google.com');
+        if (!isDrive) return null;
+
+        return (
+            <button
+                type="button"
+                onClick={() => onChange(transformGoogleDriveUrl(value, mode))}
+                className="text-[10px] font-bold text-primary hover:underline mt-1 block"
+            >
+                ✨ Convert to Direct Google Drive Link
+            </button>
+        );
+    };
+
     const sensors = useSensors(
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
@@ -151,7 +167,7 @@ export function ProjectForm({ initialData, onSubmit, onCancel }: ProjectFormProp
             category: initialData?.category || "",
             portfolioImages: initialData?.portfolioImages || [],
             documents: initialData?.documents || [],
-            tags: initialData?.tags?.join(", ") || "",
+            tags: Array.isArray(initialData?.tags) ? initialData?.tags.join(", ") : (initialData?.tags || ""),
             github: initialData?.github || "",
             link: initialData?.link || "",
             order: initialData?.order || 0,
@@ -169,6 +185,19 @@ export function ProjectForm({ initialData, onSubmit, onCancel }: ProjectFormProp
             },
             testimonials: initialData?.testimonials || [],
             visibility: {
+                showStats: initialData?.visibility?.showStats ?? true,
+                showChallengeSolution: initialData?.visibility?.showChallengeSolution ?? true,
+                showTeam: initialData?.visibility?.showTeam ?? true,
+                showMilestones: initialData?.visibility?.showMilestones ?? true,
+                showDesignTokens: initialData?.visibility?.showDesignTokens ?? true,
+                showTestimonials: initialData?.visibility?.showTestimonials ?? true,
+                showProcess: initialData?.visibility?.showProcess ?? true,
+                showTech: initialData?.visibility?.showTech ?? true,
+                showFeatures: initialData?.visibility?.showFeatures ?? true,
+                showUserPersonas: initialData?.visibility?.showUserPersonas ?? true,
+                showComparison: initialData?.visibility?.showComparison ?? true,
+                showRoadmap: initialData?.visibility?.showRoadmap ?? true,
+                showReflections: initialData?.visibility?.showReflections ?? true,
                 showTechnicalDeepDive: initialData?.visibility?.showTechnicalDeepDive ?? false,
                 showArchitecture: initialData?.visibility?.showArchitecture ?? false,
                 showPerfSeo: initialData?.visibility?.showPerfSeo ?? false,
@@ -259,34 +288,56 @@ export function ProjectForm({ initialData, onSubmit, onCancel }: ProjectFormProp
         { id: 'tech_deep_dive', label: 'Technical Deep-Dive', description: 'In-depth look at a specific architectural challenge.', icon: Code2, category: 'dev' },
     ];
 
+    const VISIBILITY_MAP: Record<string, string> = {
+        stats: "showStats",
+        challenge_solution: "showChallengeSolution",
+        team: "showTeam",
+        milestones: "showMilestones",
+        design_tokens: "showDesignTokens",
+        testimonials: "showTestimonials",
+        process_steps: "showProcess",
+        tech_stack: "showTech",
+        feature_list: "showFeatures",
+        user_personas: "showUserPersonas",
+        comparison: "showComparison",
+        roadmap: "showRoadmap",
+        reflections: "showReflections",
+        tech_deep_dive: "showTechnicalDeepDive",
+        architecture: "showArchitecture",
+        perf_seo: "showPerfSeo",
+        faq: "showFaq",
+        design_decisions: "showDesignDecisions",
+        success_metrics: "showSuccessMetrics",
+    };
+
     const addSection = (sectionId: string) => {
         if (!sectionOrder.includes(sectionId)) {
             setValue("sectionOrder", [...sectionOrder, sectionId]);
             // Automatically enable visibility when adding
-            const visibilityMap: Record<string, string> = {
-                stats: "showStats",
-                challenge_solution: "showChallengeSolution",
-                team: "showTeam",
-                milestones: "showMilestones",
-                design_tokens: "showDesignTokens",
-                testimonials: "showTestimonials",
-                process_steps: "showProcess",
-                tech_stack: "showTech",
-                feature_list: "showFeatures",
-                user_personas: "showUserPersonas",
-                comparison: "showComparison",
-                roadmap: "showRoadmap",
-                reflections: "showReflections",
-                tech_deep_dive: "showTechnicalDeepDive",
-                architecture: "showArchitecture",
-                perf_seo: "showPerfSeo",
-                faq: "showFaq",
-                design_decisions: "showDesignDecisions",
-                success_metrics: "showSuccessMetrics",
-            };
-            if (visibilityMap[sectionId]) {
-                (setValue as any)(`visibility.${visibilityMap[sectionId]}`, true);
+            if (VISIBILITY_MAP[sectionId]) {
+                (setValue as any)(`visibility.${VISIBILITY_MAP[sectionId]}`, true);
             }
+
+            // Append placeholder data to ensure visibility immediately
+            switch (sectionId) {
+                case 'stats': if (!watch("stats")?.length) appendStat({ value: "100%", label: "Satisfaction" }); break;
+                case 'team': if (!watch("teamMembers")?.length) appendTeam({ name: "John Doe", role: "Developer", avatar: "" }); break;
+                case 'milestones': if (!watch("milestones")?.length) appendMilestone({ date: "Jan 2024", label: "Project Launch" }); break;
+                case 'testimonials': if (!watch("testimonials")?.length) appendTestimonial({ quote: "Amazing work!", author: "Client Name", role: "CEO" }); break;
+                case 'process_steps': if (!watch("processSteps")?.length) appendProcess({ title: "Inception", description: "Initial research and planning phase." }); break;
+                case 'tech_stack': if (!watch("techStack")?.length) appendTech({ name: "React", level: "Primary" }); break;
+                case 'feature_list': if (!watch("features")?.length) appendFeature({ title: "Core Engine", description: "The heart of the application." }); break;
+                case 'comparison': if (!watch("comparison")?.length) appendComparison({ before: "Slow manual work", after: "Fast automated system", caption: "90% improvement" }); break;
+                case 'user_personas': if (!watch("userPersonas")?.length) appendPersona({ name: "User Alex", role: "Target Audience", bio: "A busy professional...", goals: "Speed", pains: "Complexity" }); break;
+                case 'roadmap': if (!watch("roadmap")?.length) appendRoadmap({ title: "V2 Release", date: "Q3 2024", status: "Planned" }); break;
+                case 'reflections': if (!watch("reflections")?.length) appendReflection({ title: "Key Lesson", content: "Always prioritize user feedback." }); break;
+                case 'tech_deep_dive': if (!watch("technicalDeepDive")?.length) appendDeepDive({ title: "Architecture", description: "How we scaled the backend.", code: "// code goes here", language: "typescript" }); break;
+                case 'architecture': if (!watch("architecture")?.length) appendArchitecture({ title: "System Flow", description: "High-level architectural overview.", image: "" }); break;
+                case 'faq': if (!watch("faq")?.length) appendFaq({ question: "Is it scalable?", answer: "Yes, fully scalable." }); break;
+                case 'design_decisions': if (!watch("designDecisions")?.length) appendDecision({ title: "Dark Mode", rationale: "Better eye comfort.", choice: "OLED Pitch Black" }); break;
+                case 'success_metrics': if (!watch("successMetrics")?.length) appendMetric({ label: "Uptime", value: "99.9%", trend: "up" }); break;
+            }
+
             setShowBlueprintPicker(false);
         }
     };
@@ -336,7 +387,14 @@ export function ProjectForm({ initialData, onSubmit, onCancel }: ProjectFormProp
     const handleFormSubmit = async (data: any) => {
         setLoading(true);
         try {
-            await onSubmit(data);
+            // Transform tags from string to array before submitting
+            const formattedData = {
+                ...data,
+                tags: typeof data.tags === 'string'
+                    ? data.tags.split(",").map((s: string) => s.trim()).filter(Boolean)
+                    : data.tags
+            };
+            await onSubmit(formattedData);
         } finally {
             setLoading(false);
         }
@@ -596,6 +654,23 @@ export function ProjectForm({ initialData, onSubmit, onCancel }: ProjectFormProp
                                                     <span className="font-black text-xs uppercase tracking-[0.15em] text-slate-900 truncate pr-4">{blueprint.label}</span>
                                                 </div>
                                                 <div className="flex items-center gap-1 pr-2 shrink-0 pointer-events-auto relative z-50">
+                                                    {VISIBILITY_MAP[sectionId] && (
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                const current = watch(`visibility.${VISIBILITY_MAP[sectionId]}` as any);
+                                                                (setValue as any)(`visibility.${VISIBILITY_MAP[sectionId]}`, !current);
+                                                            }}
+                                                            onPointerDown={(e) => e.stopPropagation()}
+                                                            className={`rounded-full w-9 h-9 transition-colors ${watch(`visibility.${VISIBILITY_MAP[sectionId]}` as any) ? 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50 opacity-40 hover:opacity-100'}`}
+                                                            title={watch(`visibility.${VISIBILITY_MAP[sectionId]}` as any) ? "Module Visible" : "Module Hidden"}
+                                                        >
+                                                            {watch(`visibility.${VISIBILITY_MAP[sectionId]}` as any) ? <Eye className="w-[18px] h-[18px]" strokeWidth={2} /> : <EyeOff className="w-[18px] h-[18px]" strokeWidth={2} />}
+                                                        </Button>
+                                                    )}
                                                     <Button
                                                         type="button"
                                                         variant="ghost"
@@ -692,11 +767,14 @@ export function ProjectForm({ initialData, onSubmit, onCancel }: ProjectFormProp
                                                             {teamFields.map((field, index) => (
                                                                 <div key={field.id} className="p-4 bg-muted/10 rounded-2xl border space-y-3 relative group">
                                                                     <button type="button" onClick={() => removeTeam(index)} className="absolute top-2 right-2 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-4 h-4" /></button>
-                                                                    <Input {...register(`teamMembers.${index}.name` as const)} placeholder="Name" />
-                                                                    <Input {...register(`teamMembers.${index}.role` as const)} placeholder="Role" />
+                                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                                        <Input {...register(`teamMembers.${index}.name` as const)} placeholder="Name" />
+                                                                        <Input {...register(`teamMembers.${index}.role` as const)} placeholder="Role" />
+                                                                    </div>
+                                                                    <Input {...register(`teamMembers.${index}.url` as const)} placeholder="Profile URL (e.g. LinkedIn, Portfolio)" className="text-xs" />
                                                                 </div>
                                                             ))}
-                                                            <Button type="button" variant="outline" size="sm" onClick={() => appendTeam({ name: "John Doe", role: "UI/UX Designer", avatar: "", url: "" })} className="w-full border-dashed rounded-xl"><Plus className="w-4 h-4 mr-2" /> Add Member</Button>
+                                                            <Button type="button" variant="outline" size="sm" onClick={() => appendTeam({ name: "John Doe", role: "UI/UX Designer", avatar: "", url: "https://linkedin.com/in/johndoe" })} className="w-full border-dashed rounded-xl"><Plus className="w-4 h-4 mr-2" /> Add Member</Button>
                                                         </div>
                                                     )}
 
@@ -729,9 +807,19 @@ export function ProjectForm({ initialData, onSubmit, onCancel }: ProjectFormProp
                                                                         <Input {...register(`testimonials.${index}.author` as const)} placeholder="Author" />
                                                                         <Input {...register(`testimonials.${index}.role` as const)} placeholder="Role" />
                                                                     </div>
+                                                                    <Input {...register(`testimonials.${index}.url` as const)} placeholder="Social/LinkedIn URL" className="h-8 text-[10px]" />
+                                                                    <ToggleGoogleDrive
+                                                                        value={watch(`testimonials.${index}.url`) || ""}
+                                                                        onChange={(val) => setValue(`testimonials.${index}.url`, val)}
+                                                                    />
+                                                                    <ToggleGoogleDrive
+                                                                        value={watch(`testimonials.${index}.avatar`) || ""}
+                                                                        onChange={(val) => setValue(`testimonials.${index}.avatar`, val)}
+                                                                        mode="image"
+                                                                    />
                                                                 </div>
                                                             ))}
-                                                            <Button type="button" variant="outline" size="sm" onClick={() => appendTestimonial({ quote: "Absolutely fantastic work. Exceeded all our expectations.", author: "Jane Smith", role: "Product Manager", avatar: "" })} className="w-full border-dashed rounded-xl"><Plus className="w-4 h-4 mr-2" /> Add Testimonial</Button>
+                                                            <Button type="button" variant="outline" size="sm" onClick={() => appendTestimonial({ quote: "Absolutely fantastic work. Exceeded all our expectations.", author: "Jane Smith", role: "Product Manager", avatar: "", url: "https://twitter.com/janesmith" })} className="w-full border-dashed rounded-xl"><Plus className="w-4 h-4 mr-2" /> Add Testimonial</Button>
                                                         </div>
                                                     )}
 
@@ -760,12 +848,16 @@ export function ProjectForm({ initialData, onSubmit, onCancel }: ProjectFormProp
                                                                         </div>
                                                                     </div>
                                                                     <div className="space-y-2">
-                                                                        <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Detailed Description</Label>
-                                                                        <Textarea {...register(`processSteps.${index}.description` as const)} placeholder="Describe the activities performed in this phase..." className="h-20" />
+                                                                        <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Step URL / Resource (Optional)</Label>
+                                                                        <Input {...register(`processSteps.${index}.url` as const)} placeholder="https://..." className="text-xs" />
+                                                                        <ToggleGoogleDrive
+                                                                            value={watch(`processSteps.${index}.url`) || ""}
+                                                                            onChange={(val) => setValue(`processSteps.${index}.url`, val)}
+                                                                        />
                                                                     </div>
                                                                 </div>
                                                             ))}
-                                                            <Button type="button" variant="outline" onClick={() => appendProcess({ title: "Discovery & Research", description: "Deep dive into user requirements and initial exploration.", icon: "Search" })} className="w-full border-dashed rounded-2xl py-6 hover:bg-primary/5 hover:border-primary/20"><Plus className="w-4 h-4 mr-2" /> Add Phase</Button>
+                                                            <Button type="button" variant="outline" onClick={() => appendProcess({ title: "Discovery & Research", description: "Deep dive into user requirements and initial exploration.", icon: "Search", url: "https://example.com/process" })} className="w-full border-dashed rounded-2xl py-6 hover:bg-primary/5 hover:border-primary/20"><Plus className="w-4 h-4 mr-2" /> Add Phase</Button>
                                                         </div>
                                                     )}
 
@@ -786,10 +878,15 @@ export function ProjectForm({ initialData, onSubmit, onCancel }: ProjectFormProp
                                                                                 <option value="Expertise">Expertise</option>
                                                                             </select>
                                                                         </div>
+                                                                        <Input {...register(`techStack.${index}.url` as const)} placeholder="Doc URL" className="h-6 text-[9px] mt-1 border-dashed" />
+                                                                        <ToggleGoogleDrive
+                                                                            value={watch(`techStack.${index}.url`) || ""}
+                                                                            onChange={(val) => setValue(`techStack.${index}.url`, val)}
+                                                                        />
                                                                     </div>
                                                                 ))}
                                                             </div>
-                                                            <Button type="button" variant="outline" onClick={() => appendTech({ name: "React Framework", icon: "Code2", level: "Primary" })} className="w-full border-dashed rounded-2xl py-6"><Plus className="w-4 h-4 mr-2" /> Add Tool</Button>
+                                                            <Button type="button" variant="outline" onClick={() => appendTech({ name: "React Framework", icon: "Code2", level: "Primary", url: "https://react.dev" })} className="w-full border-dashed rounded-2xl py-6"><Plus className="w-4 h-4 mr-2" /> Add Tool</Button>
                                                         </div>
                                                     )}
 
@@ -804,10 +901,15 @@ export function ProjectForm({ initialData, onSubmit, onCancel }: ProjectFormProp
                                                                             <Input {...register(`features.${index}.title` as const)} placeholder="Feature Title" className="h-8 font-bold border-none bg-transparent p-0" />
                                                                         </div>
                                                                         <Textarea {...register(`features.${index}.description` as const)} placeholder="Small description..." className="h-16 text-xs bg-background/50" />
+                                                                        <Input {...register(`features.${index}.url` as const)} placeholder="External Link (Optional)" className="h-7 text-[10px] mt-1 border-dashed" />
+                                                                        <ToggleGoogleDrive
+                                                                            value={watch(`features.${index}.url`) || ""}
+                                                                            onChange={(val) => setValue(`features.${index}.url`, val)}
+                                                                        />
                                                                     </div>
                                                                 ))}
                                                             </div>
-                                                            <Button type="button" variant="outline" onClick={() => appendFeature({ title: "Real-time Sync", description: "Changes are reflected instantly across all connected devices." })} className="w-full border-dashed rounded-2xl py-6"><Plus className="w-4 h-4 mr-2" /> Add Key Feature</Button>
+                                                            <Button type="button" variant="outline" onClick={() => appendFeature({ title: "Real-time Sync", description: "Changes are reflected instantly across all connected devices.", url: "https://example.com/feature" })} className="w-full border-dashed rounded-2xl py-6"><Plus className="w-4 h-4 mr-2" /> Add Key Feature</Button>
                                                         </div>
                                                     )}
 
@@ -861,9 +963,17 @@ export function ProjectForm({ initialData, onSubmit, onCancel }: ProjectFormProp
                                                                             <Textarea {...register(`userPersonas.${index}.pains` as const)} placeholder="What are their current struggles?" className="h-20 text-xs" />
                                                                         </div>
                                                                     </div>
+                                                                    <div className="space-y-2 pt-2 border-t border-dashed">
+                                                                        <Label className="text-[10px] uppercase font-bold tracking-widest opacity-60">Persona Profile/Case Study URL</Label>
+                                                                        <Input {...register(`userPersonas.${index}.url` as const)} placeholder="https://..." className="text-xs" />
+                                                                        <ToggleGoogleDrive
+                                                                            value={watch(`userPersonas.${index}.url`) || ""}
+                                                                            onChange={(val) => setValue(`userPersonas.${index}.url`, val)}
+                                                                        />
+                                                                    </div>
                                                                 </div>
                                                             ))}
-                                                            <Button type="button" variant="outline" onClick={() => appendPersona({ name: "Sarah the Executive", role: "Marketing Director", bio: "A busy executive who needs quick insights.", goals: "Increase overall ROI and efficiency.", pains: "Too many disjointed tools limiting productivity." })} className="w-full border-dashed rounded-2xl py-6 hover:bg-primary/5 active:scale-95 transition-all"><Plus className="w-4 h-4 mr-2" /> Add User Persona</Button>
+                                                            <Button type="button" variant="outline" onClick={() => appendPersona({ name: "Sarah the Executive", role: "Marketing Director", bio: "A busy executive who needs quick insights.", goals: "Increase overall ROI and efficiency.", pains: "Too many disjointed tools limiting productivity.", url: "https://example.com/persona" })} className="w-full border-dashed rounded-2xl py-6 hover:bg-primary/5 active:scale-95 transition-all"><Plus className="w-4 h-4 mr-2" /> Add User Persona</Button>
                                                         </div>
                                                     )}
 
@@ -964,11 +1074,16 @@ export function ProjectForm({ initialData, onSubmit, onCancel }: ProjectFormProp
                                                                                     <img src={watch(`architecture.${index}.image`)} alt="Preview" className="max-h-full object-contain" />
                                                                                 </div>
                                                                             )}
+                                                                            <Input {...register(`architecture.${index}.url` as const)} placeholder="External Link / Documentation" className="mt-2 text-xs" />
+                                                                            <ToggleGoogleDrive
+                                                                                value={watch(`architecture.${index}.url`) || ""}
+                                                                                onChange={(val) => setValue(`architecture.${index}.url`, val)}
+                                                                            />
                                                                         </div>
                                                                     </div>
                                                                 </div>
                                                             ))}
-                                                            <Button type="button" variant="outline" onClick={() => appendArchitecture({ title: "Microservices Architecture", description: "Separating concerns into independent, scalable services to improve maintainability and deployment speed.", image: "" })} className="w-full border-dashed rounded-2xl py-6 hover:bg-primary/5"><Plus className="w-4 h-4 mr-2" /> Add Architecture Module</Button>
+                                                            <Button type="button" variant="outline" onClick={() => appendArchitecture({ title: "Microservices Architecture", description: "Separating concerns into independent, scalable services to improve maintainability and deployment speed.", image: "", url: "https://example.com/architecture" })} className="w-full border-dashed rounded-2xl py-6 hover:bg-primary/5"><Plus className="w-4 h-4 mr-2" /> Add Architecture Module</Button>
                                                         </div>
                                                     )}
 

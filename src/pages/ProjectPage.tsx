@@ -136,7 +136,7 @@ export function ProjectPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-12 lg:gap-16 mt-16">
                 <div className="lg:col-span-3 space-y-24">
-                    {(project.sectionOrder || ['stats', 'challenge_solution', 'embeds', 'content', 'milestones', 'design_tokens', 'gallery', 'testimonials', 'team', 'architecture', 'perf_seo', 'faq', 'design_decisions', 'success_metrics']).map((sectionId) => {
+                    {(project.sectionOrder || ['stats', 'challenge_solution', 'embeds', 'content', 'milestones', 'design_tokens', 'gallery', 'testimonials', 'team', 'process_steps', 'tech_stack', 'feature_list', 'comparison', 'user_personas', 'roadmap', 'reflections', 'architecture', 'perf_seo', 'tech_deep_dive', 'faq', 'design_decisions', 'success_metrics']).map((sectionId) => {
                         const renderContent = () => {
                             switch (sectionId) {
                                 case 'stats':
@@ -295,13 +295,30 @@ export function ProjectPage() {
                                                         "{t.quote}"
                                                     </p>
                                                     <div className="flex flex-col items-center gap-4">
-                                                        <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-secondary border-2 overflow-hidden shadow-xl">
-                                                            {t.avatar && <img src={t.avatar} className="w-full h-full object-cover" />}
-                                                        </div>
-                                                        <div className="text-center">
-                                                            <p className="font-black text-base md:text-lg">{t.author}</p>
-                                                            <p className="text-[10px] md:text-sm text-muted-foreground uppercase tracking-widest font-bold">{t.role}</p>
-                                                        </div>
+                                                        {t.url ? (
+                                                            <a href={t.url} target="_blank" rel="noreferrer" className="group/avatar flex flex-col items-center gap-4">
+                                                                <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-secondary border-2 overflow-hidden shadow-xl group-hover/avatar:border-primary transition-colors relative">
+                                                                    {t.avatar && <img src={t.avatar} className="w-full h-full object-cover" />}
+                                                                    <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center">
+                                                                        <ExternalLink className="w-4 h-4 text-white" />
+                                                                    </div>
+                                                                </div>
+                                                                <div className="text-center">
+                                                                    <p className="font-black text-base md:text-lg group-hover/avatar:text-primary transition-colors">{t.author}</p>
+                                                                    <p className="text-[10px] md:text-sm text-muted-foreground uppercase tracking-widest font-bold">{t.role}</p>
+                                                                </div>
+                                                            </a>
+                                                        ) : (
+                                                            <>
+                                                                <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-secondary border-2 overflow-hidden shadow-xl">
+                                                                    {t.avatar && <img src={t.avatar} className="w-full h-full object-cover" />}
+                                                                </div>
+                                                                <div className="text-center">
+                                                                    <p className="font-black text-base md:text-lg">{t.author}</p>
+                                                                    <p className="text-[10px] md:text-sm text-muted-foreground uppercase tracking-widest font-bold">{t.role}</p>
+                                                                </div>
+                                                            </>
+                                                        )}
                                                     </div>
                                                 </div>
                                             ))}
@@ -341,20 +358,40 @@ export function ProjectPage() {
                                                 <p className="text-lg text-muted-foreground max-w-2xl">A systematic approach to solving complex problems through phased development.</p>
                                             </div>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                                {project.processSteps.map((step, i) => (
-                                                    <div key={i} className="p-8 md:p-12 bg-secondary/5 rounded-[3rem] border border-secondary/20 hover:border-primary/30 transition-all space-y-6 group">
-                                                        <div className="flex items-center justify-between">
-                                                            <div className="p-4 bg-background rounded-[1.5rem] border shadow-sm group-hover:scale-110 transition-transform">
-                                                                <Clock className="w-6 h-6 text-primary" />
+                                                {project.processSteps.map((step, i) => {
+                                                    const stepContent = (
+                                                        <div className="p-8 md:p-12 bg-secondary/5 rounded-[3rem] border border-secondary/20 hover:border-primary/30 transition-all space-y-6 group h-full relative overflow-hidden">
+                                                            <div className="flex items-center justify-between relative z-10">
+                                                                <div className="p-4 bg-background rounded-[1.5rem] border shadow-sm group-hover:scale-110 transition-transform">
+                                                                    {step.icon ? (
+                                                                        /* Dynamic icon logic potentially needed, but Cpu is a placeholder */
+                                                                        <Cpu className="w-6 h-6 text-primary" />
+                                                                    ) : <Clock className="w-6 h-6 text-primary" />}
+                                                                </div>
+                                                                <span className="text-5xl font-black opacity-5 group-hover:opacity-10 transition-opacity">0{i + 1}</span>
                                                             </div>
-                                                            <span className="text-5xl font-black opacity-5 group-hover:opacity-10 transition-opacity">0{i + 1}</span>
+                                                            <div className="space-y-2 relative z-10">
+                                                                <h3 className="text-2xl font-black group-hover:text-primary transition-colors">{step.title}</h3>
+                                                                <p className="text-muted-foreground leading-relaxed">{step.description}</p>
+                                                            </div>
+                                                            {step.url && (
+                                                                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                    <ExternalLink className="w-4 h-4 text-primary" />
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                        <div className="space-y-2">
-                                                            <h3 className="text-2xl font-black">{step.title}</h3>
-                                                            <p className="text-muted-foreground leading-relaxed">{step.description}</p>
+                                                    );
+
+                                                    return (
+                                                        <div key={i}>
+                                                            {step.url ? (
+                                                                <a href={step.url} target="_blank" rel="noreferrer" className="block h-full">
+                                                                    {stepContent}
+                                                                </a>
+                                                            ) : stepContent}
                                                         </div>
-                                                    </div>
-                                                ))}
+                                                    );
+                                                })}
                                             </div>
                                         </section>
                                     ) : null;
@@ -366,17 +403,26 @@ export function ProjectPage() {
                                                 <div className="h-1.5 w-24 bg-primary/20 mx-auto rounded-full" />
                                             </div>
                                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                                                {project.techStack.map((tech, i) => (
-                                                    <div key={i} className="flex flex-col items-center gap-4 p-6 bg-background rounded-3xl border shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-500">
-                                                        <div className="w-12 h-12 flex items-center justify-center bg-primary/5 rounded-2xl">
-                                                            <Cpu className="w-6 h-6 text-primary" />
+                                                {project.techStack.map((tech, i) => {
+                                                    const techCard = (
+                                                        <div className="flex flex-col items-center gap-4 p-6 bg-background rounded-3xl border shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-500 group h-full">
+                                                            <div className="w-12 h-12 flex items-center justify-center bg-primary/5 rounded-2xl group-hover:bg-primary/10 transition-colors">
+                                                                <Cpu className="w-6 h-6 text-primary" />
+                                                            </div>
+                                                            <div className="text-center">
+                                                                <p className="font-black text-xs uppercase tracking-wider group-hover:text-primary transition-colors">{tech.name}</p>
+                                                                <p className="text-[9px] font-bold text-primary/60">{tech.level || "Primary"}</p>
+                                                            </div>
                                                         </div>
-                                                        <div className="text-center">
-                                                            <p className="font-black text-xs uppercase tracking-wider">{tech.name}</p>
-                                                            <p className="text-[9px] font-bold text-primary/60">{tech.level || "Primary"}</p>
-                                                        </div>
-                                                    </div>
-                                                ))}
+                                                    );
+                                                    return tech.url ? (
+                                                        <a key={i} href={tech.url} target="_blank" rel="noreferrer" className="block">
+                                                            {techCard}
+                                                        </a>
+                                                    ) : (
+                                                        <div key={i}>{techCard}</div>
+                                                    );
+                                                })}
                                             </div>
                                         </section>
                                     ) : null;
@@ -391,13 +437,18 @@ export function ProjectPage() {
                                             </div>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                 {project.features.map((feature, i) => (
-                                                    <div key={i} className="flex items-start gap-6 p-8 bg-card rounded-[2.5rem] border hover:border-primary/20 transition-all shadow-sm">
-                                                        <div className="bg-primary/10 p-3 rounded-2xl shrink-0">
+                                                    <div key={i} className="flex items-start gap-6 p-8 bg-card rounded-[2.5rem] border hover:border-primary/20 transition-all shadow-sm group">
+                                                        <div className="bg-primary/10 p-3 rounded-2xl shrink-0 group-hover:scale-110 transition-transform">
                                                             <CheckCircle2 className="w-5 h-5 text-primary" />
                                                         </div>
-                                                        <div className="space-y-1">
-                                                            <h3 className="font-black text-xl">{feature.title}</h3>
+                                                        <div className="space-y-3 flex-1">
+                                                            <h3 className="font-black text-xl group-hover:text-primary transition-colors">{feature.title}</h3>
                                                             {feature.description && <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>}
+                                                            {feature.url && (
+                                                                <a href={feature.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-primary font-black text-[10px] uppercase tracking-widest hover:underline pt-2">
+                                                                    Learn More <ArrowRight className="w-3 h-3" />
+                                                                </a>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 ))}
@@ -439,11 +490,24 @@ export function ProjectPage() {
                                                 {project.userPersonas.map((p, i) => (
                                                     <div key={i} className="p-8 md:p-12 bg-secondary/5 rounded-[3rem] md:rounded-[4rem] border border-secondary/20 space-y-10 group hover:border-primary/20 transition-all duration-500">
                                                         <div className="flex flex-col md:flex-row gap-8 items-center md:items-start text-center md:text-left">
-                                                            <div className="w-24 h-24 md:w-40 md:h-40 rounded-[2.5rem] bg-gradient-to-br from-primary/10 to-primary/5 border-2 flex items-center justify-center shrink-0 shadow-lg group-hover:scale-105 transition-transform duration-500">
-                                                                {p.avatar ? (
-                                                                    <img src={p.avatar} className="w-full h-full object-cover" />
+                                                            <div className="w-24 h-24 md:w-40 md:h-40 rounded-[2.5rem] bg-gradient-to-br from-primary/10 to-primary/5 border-2 flex items-center justify-center shrink-0 shadow-lg group-hover:scale-105 transition-transform duration-500 relative overflow-hidden">
+                                                                {p.url ? (
+                                                                    <a href={p.url} target="_blank" rel="noreferrer" className="w-full h-full block group/persona relative">
+                                                                        {p.avatar ? (
+                                                                            <img src={p.avatar} className="w-full h-full object-cover" />
+                                                                        ) : (
+                                                                            <UserSearch className="w-12 h-12 md:w-20 md:h-20 text-primary/30" />
+                                                                        )}
+                                                                        <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover/persona:opacity-100 transition-opacity flex items-center justify-center">
+                                                                            <ExternalLink className="w-6 h-6 text-white" />
+                                                                        </div>
+                                                                    </a>
                                                                 ) : (
-                                                                    <UserSearch className="w-12 h-12 md:w-20 md:h-20 text-primary/30" />
+                                                                    p.avatar ? (
+                                                                        <img src={p.avatar} className="w-full h-full object-cover" />
+                                                                    ) : (
+                                                                        <UserSearch className="w-12 h-12 md:w-20 md:h-20 text-primary/30" />
+                                                                    )
                                                                 )}
                                                             </div>
                                                             <div className="space-y-4">
@@ -537,8 +601,17 @@ export function ProjectPage() {
                                                             <p className="text-lg text-muted-foreground leading-relaxed">{item.description}</p>
                                                         </div>
                                                         {item.image && (
-                                                            <div className="rounded-[3rem] overflow-hidden border-8 border-muted shadow-2xl bg-muted aspect-video">
-                                                                <img src={item.image} alt={item.title} className="w-full h-full object-contain p-4" />
+                                                            <div className="rounded-[3rem] overflow-hidden border-8 border-muted shadow-2xl bg-muted aspect-video relative group/arch">
+                                                                {item.url ? (
+                                                                    <a href={item.url} target="_blank" rel="noreferrer" className="block w-full h-full">
+                                                                        <img src={item.image} alt={item.title} className="w-full h-full object-contain p-4 group-hover/arch:scale-105 transition-transform duration-700" />
+                                                                        <div className="absolute top-4 right-4 p-3 bg-primary text-white rounded-2xl opacity-0 group-hover/arch:opacity-100 transition-opacity shadow-lg">
+                                                                            <ExternalLink className="w-6 h-6" />
+                                                                        </div>
+                                                                    </a>
+                                                                ) : (
+                                                                    <img src={item.image} alt={item.title} className="w-full h-full object-contain p-4" />
+                                                                )}
                                                             </div>
                                                         )}
                                                     </div>
